@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timely - Timezone Converter</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <div class="header-title">
+          <h1><img src="./icons/icon16.png" alt="Timely Logo"> Timely</h1>
+          <p class="subtitle">Multi-Timezone Converter</p>
+        </div>
+        <label class="theme-switch" title="Toggle theme">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider">
+            <span class="icon sun">☀️</span>
+            <span class="icon moon">🌙</span>
+          </span>
+        </label>
+      </div>
+    </header>
+
+    <div class="add-timezone-section">
+      <div class="search-controls">
+        <input type="text" id="timezoneSearch" class="timezone-search" placeholder="🔍 Search timezone (e.g., IST, UTC, New York)...">
+        
+        <div class="time-format-toggle">
+          <button class="format-btn active" data-format="24">24</button>
+          <button class="format-btn" data-format="12">12</button>
+        </div>
+        
+        <button class="refresh-btn" id="refreshBtn" title="Reset to current time">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div id="timezoneDropdown" class="timezone-dropdown" style="display: none;">
+        <!-- Timezone options will be populated here -->
+      </div>
+    </div>
+
+    <div id="timezonesContainer" class="timezones-container">
+      <!-- Timezone cards will be added here dynamically -->
+    </div>
+
+    <div id="emptyState" class="empty-state">
+      <p>No timezones added yet.</p>
+      <p>Add a timezone to get started!</p>
+    </div>
+
+    <footer>
+      <button id="resetBtn" class="btn btn-secondary">Reset All</button>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

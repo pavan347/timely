@@ -1,0 +1,661 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-color: #9333ea;
+  --primary-hover: #7c3aed;
+  --secondary-color: #a78bfa;
+  --bg-gradient-start: #9333ea;
+  --bg-gradient-end: #7c3aed;
+  
+  /* Light mode colors */
+  --body-bg: #f5f5f7;
+  --bg-color: #ffffff;
+  --card-bg: #f8f9fa;
+  --text-color: #1d1d1f;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --border-color: #e0e0e0;
+  --input-bg: #ffffff;
+  --input-border: #dddddd;
+  --shadow: rgba(0, 0, 0, 0.08);
+  --shadow-hover: rgba(0, 0, 0, 0.12);
+  --dropdown-bg: #ffffff;
+  --empty-text: #999999;
+  --header-text: #ffffff;
+}
+
+body.dark-mode {
+  --body-bg: #0a0a0a;
+  --bg-color: #1c1c1e;
+  --card-bg: #2c2c2e;
+  --text-color: #f5f5f7;
+  --text-secondary: #aeaeb2;
+  --text-tertiary: #8e8e93;
+  --border-color: #38383a;
+  --input-bg: #2c2c2e;
+  --input-border: #48484a;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --shadow-hover: rgba(0, 0, 0, 0.6);
+  --dropdown-bg: #2c2c2e;
+  --empty-text: #8e8e93;
+  --header-text: #ffffff;
+}
+
+body {
+  width: 450px;
+  min-height: 500px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: var(--body-bg);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-y: auto;
+}
+
+/* Outer scrollbar styling (body) */
+body::-webkit-scrollbar {
+  width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+  background: var(--body-bg);
+}
+
+body::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 10px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  background: var(--bg-color);
+  border-radius: 0;
+  box-shadow: none;
+  transition: background-color 0.3s ease;
+}
+
+header {
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  color: var(--header-text);
+  padding: 24px 20px;
+  border-radius: 0;
+  position: relative;
+  box-shadow: 0 2px 10px var(--shadow);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-title {
+  flex: 1;
+}
+
+header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+header h1 img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.subtitle {
+  font-size: 13px;
+  opacity: 0.95;
+  font-weight: 500;
+}
+
+/* Theme Toggle Switch */
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 30px;
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+}
+
+.slider:before {
+  content: "";
+  position: absolute;
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.theme-switch input:checked + .slider:before {
+  transform: translateX(30px);
+}
+
+.slider .icon {
+  font-size: 14px;
+  z-index: 1;
+  transition: opacity 0.3s;
+}
+
+.slider .sun {
+  opacity: 1;
+}
+
+.slider .moon {
+  opacity: 0.5;
+}
+
+.theme-switch input:checked + .slider .sun {
+  opacity: 0.5;
+}
+
+.theme-switch input:checked + .slider .moon {
+  opacity: 1;
+}
+
+.add-timezone-section {
+  padding: 20px;
+  position: relative;
+  background: var(--bg-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.search-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.timezone-search {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text-color);
+  transition: all 0.2s ease;
+}
+
+.timezone-search:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+}
+
+.time-format-toggle {
+  display: flex;
+  gap: 4px;
+  background: var(--card-bg);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.format-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  min-width: 36px;
+}
+
+.format-btn:hover {
+  background: var(--border-color);
+}
+
+.format-btn.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 2px 6px rgba(147, 51, 234, 0.3);
+}
+
+.refresh-btn {
+  padding: 10px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.refresh-btn:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+  transform: rotate(180deg);
+}
+
+.refresh-btn:active {
+  transform: rotate(180deg) scale(0.95);
+}
+
+.timezone-dropdown {
+  position: absolute;
+  top: 72px;
+  left: 20px;
+  right: 20px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--dropdown-bg);
+  border: 2px solid var(--primary-color);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px var(--shadow);
+  z-index: 1000;
+}
+
+.timezone-option {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.timezone-option:last-child {
+  border-bottom: none;
+}
+
+.timezone-option:hover {
+  background: var(--card-bg);
+}
+
+.timezone-option-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-color);
+}
+
+.timezone-option-details {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.no-results {
+  padding: 20px;
+  text-align: center;
+  color: var(--empty-text);
+  font-size: 13px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+}
+
+.btn-primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background: var(--border-color);
+  border-color: var(--text-tertiary);
+}
+
+.timezones-container {
+  flex: 1;
+  padding: 20px;
+  overflow-y: visible;
+  background: var(--bg-color);
+}
+
+.timezone-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+  box-shadow: 0 1px 3px var(--shadow);
+}
+
+.timezone-card:active {
+  cursor: default;
+}
+
+.timezone-card.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+}
+
+.timezone-card.drag-over {
+  border-color: var(--primary-color);
+  border-style: dashed;
+  transform: scale(1.02);
+}
+
+.timezone-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+.timezone-card:hover:active {
+  cursor: grabbing;
+}
+
+.timezone-card:hover .remove-btn {
+  opacity: 1;
+}
+
+.timezone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.drag-handle {
+  cursor: move;
+  cursor: grab;
+  color: var(--text-tertiary);
+  font-size: 18px;
+  margin-right: 8px;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.drag-handle:hover {
+  color: var(--primary-color);
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.timezone-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-color);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.timezone-abbr {
+  font-size: 15px;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.timezone-full {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.timezone-gmt {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  background: var(--border-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.remove-btn {
+  background: #ff4757;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  padding: 0;
+}
+
+.remove-btn:hover {
+  background: #ee5a6f;
+  transform: scale(1.1);
+}
+
+.time-date-inputs {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.input-group label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.input-group.date-group {
+  flex-basis: 50%;
+}
+
+.input-group.time-group {
+  flex-basis: 50%;
+}
+
+.time-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-input {
+  padding: 10px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text-color);
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.time-input {
+  padding: 10px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: border-color 0.2s;
+  font-family: 'Courier New', monospace;
+  background: var(--input-bg);
+  color: var(--text-color);
+  text-align: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.time-period {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  background: var(--primary-color);
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  min-width: 46px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.time-period:hover {
+  background: var(--primary-hover);
+  transform: scale(1.05);
+}
+
+.time-period:active {
+  transform: scale(0.98);
+}
+
+/* slider removed - styles deleted */
+
+.date-input {
+  padding: 8px 10px;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: border-color 0.2s;
+  background: var(--input-bg);
+  color: var(--text-color);
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.empty-state {
+  display: none;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--empty-text);
+  background: var(--bg-color);
+}
+
+.empty-state p {
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+footer {
+  padding: 20px;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  background: var(--bg-color);
+}
+
+/* Scrollbar styling */
+.timezone-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.timezone-dropdown::-webkit-scrollbar-track {
+  background: var(--card-bg);
+  border-radius: 10px;
+}
+
+.timezone-dropdown::-webkit-scrollbar-thumb {
+  background: var(--secondary-color);
+  border-radius: 10px;
+}
+
+.timezone-dropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
