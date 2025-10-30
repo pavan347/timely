@@ -402,6 +402,17 @@ function setupDragAndDrop() {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/html', card.innerHTML);
       });
+
+      // Ensure cleanup when drag ends
+      dragHandle.addEventListener('dragend', () => {
+        if (draggedElement) {
+          draggedElement.classList.remove('dragging');
+        }
+        // Remove drag-over class from all cards
+        document.querySelectorAll('.timezone-card').forEach(c => c.classList.remove('drag-over'));
+        draggedElement = null;
+        draggedIndex = null;
+      });
     }
 
       // Remove drag-over class from all cards when drag starts
@@ -409,6 +420,8 @@ function setupDragAndDrop() {
         const allCards = document.querySelectorAll('.timezone-card');
         allCards.forEach(c => c.classList.remove('drag-over'));
       });
+    // Allow drop by preventing default on dragover
+    card.addEventListener('dragover', handleDragOver);
     card.addEventListener('drop', handleDrop);
     card.addEventListener('dragleave', handleDragLeave);
   });
@@ -431,6 +444,8 @@ function handleDragEnd(e) {
   // Remove drag-over class from all cards
   const cards = document.querySelectorAll('.timezone-card');
   cards.forEach(card => card.classList.remove('drag-over'));
+  draggedElement = null;
+  draggedIndex = null;
 }
 
 function handleDragOver(e) {
@@ -457,14 +472,20 @@ async function handleDrop(e) {
   }
   
   this.classList.remove('drag-over');
+  if (draggedElement) {
+    draggedElement.classList.remove('dragging');
+  }
   
   if (draggedElement !== this) {
     const dropIndex = Array.from(this.parentNode.children).indexOf(this);
     
     // Reorder the activeTz array
-    const draggedTz = activeTz[draggedIndex];
-    activeTz.splice(draggedIndex, 1);
-    activeTz.splice(dropIndex, 0, draggedTz);
+    const safeDraggedIndex = typeof draggedIndex === 'number' ? draggedIndex : activeTz.indexOf(draggedElement?.dataset?.timezone);
+    const draggedTz = activeTz[safeDraggedIndex];
+    if (draggedTz !== undefined && dropIndex > -1) {
+      activeTz.splice(safeDraggedIndex, 1);
+      activeTz.splice(dropIndex, 0, draggedTz);
+    }
     
     // Save the new order
     await saveTimezones();
@@ -607,11 +628,9 @@ function createTimezoneCard(tz) {
     </div>
     <div class="time-date-inputs">
       <div class="input-group date-group">
-        <label>Date</label>
         <input type="date" class="date-input" value="${timeInTz.date}" data-tz="${tz}">
       </div>
       <div class="input-group time-group">
-        <label>Time</label>
         <div class="time-wrapper">
           ${timeWrapperContent}
         </div>
