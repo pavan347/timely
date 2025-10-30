@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Timely — Timezone Converter Extension Documentation</title>
+  <meta name="description"
+    content="Timely is a compact Chrome extension for converting times across multiple time zones with search, drag-to-reorder, 12/24h, and dark mode." />
+  <style>
+    :root {
+      --primary: #9333ea;
+      --primary-2: #7c3aed;
+      --bg: #0b0b0c;
+      --card: #141416;
+      --text: #eaeaf0;
+      --muted: #a7a7b0;
+      --border: #26262a;
+      --accent: #22d3ee;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .25);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    /* Light theme overrides */
+    body.light {
+      --bg: #ffffff;
+      --card: #f8fafc;
+      --text: #0b0b0c;
+      --muted: #4b5563;
+      --border: #e5e7eb;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Navbar */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: saturate(120%) blur(6px);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    body.light .nav {
+      background: var(--bg);
+    }
+
+    .wrap {
+      width: min(1120px, 92%);
+      margin: 0 auto;
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    .brand img.logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: block;
+    }
+
+    .nav a {
+      color: var(--text);
+      opacity: .9;
+    }
+
+    .nav a:hover {
+      opacity: 1;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
+
+    .nav-cta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: none;
+    }
+
+    body.light .btn.primary {
+      color: white;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      border-color: #0000;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    /* Theme toggle switch */
+    .theme-switch {
+      width: 54px;
+      height: 28px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      position: relative;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+      color: var(--muted);
+      box-shadow: none;
+    }
+
+    .theme-switch .thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      transition: left .2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
+    }
+
+    .theme-switch .sun,
+    .theme-switch .moon {
+      font-size: 14px;
+      line-height: 1;
+      opacity: .9;
+      user-select: none;
+    }
+
+    body.light .theme-switch .thumb {
+      left: 29px;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 48px 0 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 44px);
+      margin: 0 0 10px;
+      line-height: 1.08;
+    }
+
+    .hero p.tag {
+      color: var(--muted);
+      margin: 6px 0 22px;
+      font-size: 16px;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Sections */
+    section {
+      padding: 42px 0;
+      scroll-margin-top: 76px;
+    }
+
+    section h2 {
+      font-size: 26px;
+      margin: 0 0 10px;
+    }
+
+    section p.lead {
+      color: var(--muted);
+      margin: 0 0 18px;
+    }
+
+    /* Grids */
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid.features {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: none;
+    }
+
+    .card h3 {
+      margin: 8px 0 8px;
+      font-size: 18px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .k {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      font-weight: 800;
+      box-shadow: inset 0 0 28px rgba(255, 255, 255, .08);
+    }
+
+    /* Steps */
+    .steps {
+      counter-reset: step;
+      display: grid;
+      gap: 10px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .step .n {
+      counter-increment: step;
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: var(--card);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+    }
+
+    .step .n::before {
+      content: counter(step);
+      font-weight: 700;
+    }
+
+    /* Gallery */
+    .shots {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .shots figure { margin: 0; }
+    .shots img { width: 100%; height: 360px; object-fit: cover; border-radius: 14px; border: 1px solid var(--border); background: var(--card); display: block; cursor: zoom-in; }
+    .shots figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; text-align: center; }
+    @media (max-width: 700px) { .shots img { height: 280px; } }
+    @media (min-width: 1200px) { .shots img { height: 420px; } }
+
+    /* Lightbox */
+    .lightbox-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .lightbox-backdrop.open { display: flex; }
+    .lightbox-dialog { position: relative; max-width: 92vw; max-height: 92vh; outline: none; }
+    .lightbox-img { max-width: 92vw; max-height: 86vh; border-radius: 12px; border: 1px solid var(--border); display: block; }
+    .lightbox-caption { color: #e5e7eb; text-align: center; margin-top: 10px; font-size: 14px; }
+    .lightbox-close { position: absolute; top: -10px; right: -10px; background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 999px; width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer; }
+
+    /* FAQ */
+    details {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: var(--card);
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    details+details {
+      margin-top: 10px;
+    }
+
+    /* Footer */
+    footer {
+      padding: 28px 0 40px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* Utilities */
+    .two {
+      display: grid;
+      grid-template-columns: 1.2fr .9fr;
+      gap: 22px;
+      align-items: center;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .note {
+      border-left: 3px solid var(--accent);
+      padding-left: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .two {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Code blocks */
+    pre {
+      background: #0f0f12;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      overflow: auto;
+      box-shadow: none;
+    }
+
+    /* Mobile nav */
+    .menu-btn {
+      display: none;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    @media (max-width: 900px) {
+      .nav-inner {
+        flex-wrap: wrap;
+      }
+
+      .nav-links {
+        display: none;
+        width: 100%;
+        order: 3;
+        padding: 8px 0;
+      }
+
+      .nav-links.open {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .menu-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .nav-cta {
+        margin-left: auto;
+      }
+    }
+
+    body.light pre {
+      background: #f3f4f6;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      color: var(--text);
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand"><img class="logo" src="logo.png" alt="Timely logo"> Timely</div>
+      <button class="menu-btn" id="menuToggle" aria-expanded="false" aria-controls="primaryNav">Menu ▾</button>
+      <div class="nav-links" id="primaryNav">
+        <a href="#overview">Overview</a>
+        <a href="#features">Features</a>
+        <a href="#install">Install</a>
+  <a href="#usage">Usage</a>
+  <a href="#screenshots">Preview</a>
+        <a href="#faq">FAQ</a>
+        <a href="#support">Support</a>
+      </div>
+      <div class="nav-cta">
+        <a class="btn" href="https://github.com/pavan347/timely" target="_blank" rel="noreferrer">View Repository</a>
+        <a class="btn primary" href="#install">Install Locally</a>
+        <div class="theme-switch" id="themeToggle" role="button" aria-pressed="false" aria-label="Toggle theme"
+          title="Toggle theme">
+          <span class="sun">☀️</span>
+          <span class="moon">🌙</span>
+          <div class="thumb"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="wrap two">
+      <div>
+        <h1>Convert timezones at a glance</h1>
+        <p class="tag">Timely is a compact Chrome extension with accurate conversions across daylight savings, quick
+          search, drag-to-reorder, and a simple light/dark theme.</p>
+        <div class="hero-cta">
+          <a class="btn primary" href="#install">Install Locally</a>
+          <a class="btn" href="#features">Explore Features</a>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <h3 style="margin-top:0">Quick start</h3>
+          <div class="steps">
+            <div class="step">
+              <div class="n"></div>
+              <div><strong>Get the code</strong> — clone or download from <a href="https://github.com/pavan347/timely"
+                  target="_blank" rel="noreferrer">github.com/pavan347/timely</a>:
+                <div style="margin-top:8px;">
+                  <pre><code class="language-powershell">git clone https://github.com/pavan347/timely.git
+cd timely</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="n"></div>
+              <div>Open <strong>chrome://extensions</strong> and enable <strong>Developer mode</strong>.</div>
+            </div>
+            <div class="step">
+              <div class="n"></div>
+              <div>Click <strong>Load unpacked</strong> and select the <code>Timely-Extension</code> folder.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </header>
+
+  <main>
+    <section id="overview">
+      <div class="wrap">
+        <h2>Overview</h2>
+        <p class="lead">Timely helps you coordinate across time zones without switching tabs or doing mental math. Add
+          the zones you care about, set a base date and time, and instantly see corresponding times across your list.
+        </p>
+        <p class="note">Privacy-friendly: your preferences (time zones, theme, format) are stored using
+          <code>chrome.storage.sync</code> and never leave your browser.</p>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="wrap">
+        <h2>Features</h2>
+        <div class="grid features">
+          <div class="card"><span class="k">A</span>
+            <h3>Fast timezone search</h3>
+            <p>Search by city, abbreviation, or region and add to your list instantly.</p>
+          </div>
+          <div class="card"><span class="k">B</span>
+            <h3>Accurate conversions</h3>
+            <p>Robust logic handles DST transitions and fractional offsets correctly.</p>
+          </div>
+          <div class="card"><span class="k">C</span>
+            <h3>12/24 hour formats</h3>
+            <p>Toggle formats globally; clear AM/PM display for 12h mode.</p>
+          </div>
+          <div class="card"><span class="k">D</span>
+            <h3>Drag-to-reorder</h3>
+            <p>Prioritize the time zones you use the most with simple drag handles.</p>
+          </div>
+          <div class="card"><span class="k">E</span>
+            <h3>Light/Dark themes</h3>
+            <p>Theme toggle for day and night usage.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <div class="wrap">
+        <h2>Install (Load Unpacked)</h2>
+        <p class="lead">Load the extension locally using Developer Mode. You can either clone the repository or download
+          the ZIP.</p>
+        <div class="steps">
+          <div class="step">
+            <div class="n"></div>
+            <div><strong>Get the code</strong> — Option A: Clone <a href="https://github.com/pavan347/timely"
+                target="_blank" rel="noreferrer">github.com/pavan347/timely</a>:
+              <div style="margin-top:8px;">
+                <pre><code class="language-powershell">git clone https://github.com/pavan347/timely.git
+cd timely</code></pre>
+              </div>
+              Option B: Download ZIP and extract it.
+            </div>
+          </div>
+          <div class="step">
+            <div class="n"></div>
+            <div>In Chrome, type <strong>chrome://extensions</strong> in the address bar and press Enter.</div>
+          </div>
+          <div class="step">
+            <div class="n"></div>
+            <div>Enable <strong>Developer mode</strong> (top right).</div>
+          </div>
+          <div class="step">
+            <div class="n"></div>
+            <div>Click <strong>Load unpacked</strong> and select the <code>Timely-Extension</code> folder (the folder
+              with <code>manifest.json</code>).</div>
+          </div>
+          <div class="step">
+            <div class="n"></div>
+            <div>Pin <strong>Timely</strong> to your toolbar for quick access.</div>
+          </div>
+        </div>
+        <h3 style="margin-top:18px;">Update to latest version</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="n"></div>
+            <div>If you cloned: open the project folder in a terminal and run:
+              <div style="margin-top:8px;">
+                <pre><code class="language-powershell">git pull origin main</code></pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n"></div>
+            <div>If you used ZIP: delete the old folder and re-download the latest ZIP from GitHub, then <em>Load
+                unpacked</em> again.</div>
+          </div>
+          <div class="step">
+            <div class="n"></div>
+            <div>In <strong>chrome://extensions</strong>, click <strong>Reload</strong> on the Timely card.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="usage">
+      <div class="wrap">
+        <h2>Usage</h2>
+        <div class="grid" style="grid-template-columns: 1.1fr 1fr; gap: 18px;">
+          <div class="card">
+            <h3 style="margin-top:0">Converter</h3>
+            <ul style="line-height:1.8; padding-left: 18px;">
+              <li><strong>Add timezones</strong>: click the search box, type a city/zone, pick from dropdown.</li>
+              <li><strong>Edit base time</strong>: change the date/time in any card to see conversions update.</li>
+              <li><strong>12/24h toggle</strong>: use the format toggle in the search row.</li>
+              <li><strong>Drag to reorder</strong>: use the grip icon on a card to drag it up/down.</li>
+              <li><strong>Remove</strong>: hover a card to reveal the × button.</li>
+              <li><strong>Theme</strong>: use the header switch to toggle Light/Dark.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">Tips</h3>
+            <ul style="line-height:1.8; padding-left: 18px;">
+              <li>Auto-update aligns with the clock; edits temporarily pause updates to avoid cursor jumps.</li>
+              <li>Use local date changes to see day rollovers in other timezones.</li>
+              <li>Fractional offsets (e.g., India +5:30, Nepal +5:45) are handled correctly.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+    <section id="screenshots">
+      <div class="wrap">
+        <h2>Preview</h2>
+        <p class="lead">A look at the Timely extension interface.</p>
+        <div class="shots">
+          <figure>
+            <img src="main.png" alt="Main view" loading="lazy">
+            <figcaption>Main view</figcaption>
+          </figure>
+          <figure>
+            <img src="search.png" alt="Search results" loading="lazy">
+            <figcaption>Search</figcaption>
+          </figure>
+          <figure>
+            <img src="blacktheme24.png" alt="Dark theme layout" loading="lazy">
+            <figcaption>Dark theme</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="wrap">
+        <h2>FAQ</h2>
+        <details>
+          <summary>What permissions does Timely need?</summary>
+          <div class="muted" style="margin-top:8px;">Timely uses <code>storage</code> to save your preferences. It does
+            not make network requests or collect personal data.</div>
+        </details>
+        <details>
+          <summary>How accurate are the conversions?</summary>
+          <div class="muted" style="margin-top:8px;">The converter uses a robust algorithm and the Intl API to handle
+            DST transitions and fractional offsets. It works for past and future dates.</div>
+        </details>
+        <details>
+          <summary>Why don’t I see the dropdown when I search?</summary>
+          <div class="muted" style="margin-top:8px;">Make sure the popup has focus and try clicking the search box
+            again. If needed, reload the extension via <code>chrome://extensions</code>.</div>
+        </details>
+        <details>
+          <summary>Can I reset everything?</summary>
+          <div class="muted" style="margin-top:8px;">Yes. Use the "Reset All" button at the bottom of the popup to clear
+            saved zones and settings.</div>
+        </details>
+      </div>
+    </section>
+
+    <section id="support">
+      <div class="wrap">
+        <h2>Support</h2>
+        <p class="lead">Share feedback or issues with your support team.</p>
+        <div class="grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="card">
+            <h3 style="margin-top:0">Troubleshooting</h3>
+            <ul style="line-height:1.8; padding-left: 18px;">
+              <li>Reload at <code>chrome://extensions</code> after changes.</li>
+              <li>If times look off, confirm your system clock is correct and pick the correct region (e.g., US/Eastern
+                vs. America/Toronto).</li>
+              <li>When editing time, auto-updates pause to prevent cursor jumps; they resume after a short idle.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">Contact</h3>
+            <p class="muted">Developed by <strong>Garapati Pavan Kumar</strong> at <strong>Snaplogic</strong>.</p>
+            <p class="muted">Email: <a href="mailto:pkgarapati@snaplogic.com">pkgarapati@snaplogic.com</a></p>
+            <p class="muted">Repository: <a href="https://github.com/pavan347/timely" target="_blank"
+                rel="noreferrer">github.com/pavan347/timely</a></p>
+            <p style="margin-top:10px;">
+              <a class="btn" target="_blank" rel="noreferrer" href="https://github.com/pavan347/timely/issues">Open
+                issues</a>
+              <a class="btn primary" href="mailto:pkgarapati@snaplogic.com">Email support</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">© <span id="y"></span> Timely — Timezone Converter • Built by Garapati Pavan Kumar @ Snaplogic
+    </div>
+  </footer>
+
+  <!-- Lightbox markup -->
+  <div class="lightbox-backdrop" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="lightbox-dialog" tabindex="-1">
+      <button class="lightbox-close" id="lightboxClose" aria-label="Close">✕</button>
+      <img class="lightbox-img" id="lightboxImg" alt="Preview image">
+      <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+  </div>
+
+  <script>
+    // Smooth scroll for same-page anchors
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', (e) => {
+        const id = a.getAttribute('href');
+        if (id.length > 1) {
+          e.preventDefault();
+          document.querySelector(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+    // Footer year
+    document.getElementById('y').textContent = new Date().getFullYear();
+
+    // Mobile menu toggle
+    const menuBtn = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('primaryNav');
+    if (menuBtn && navLinks) {
+      menuBtn.addEventListener('click', () => {
+        const open = navLinks.classList.toggle('open');
+        menuBtn.setAttribute('aria-expanded', String(open));
+      });
+    }
+
+    // Lightbox (click to enlarge)
+    const lb = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lightboxImg');
+    const lbCap = document.getElementById('lightboxCaption');
+    const lbClose = document.getElementById('lightboxClose');
+    const openLightbox = (src, alt, caption) => {
+      lbImg.src = src;
+      lbImg.alt = alt || '';
+      lbCap.textContent = caption || alt || '';
+      lb.classList.add('open');
+      lb.setAttribute('aria-hidden', 'false');
+      // focus for accessibility
+      lb.querySelector('.lightbox-dialog').focus();
+    };
+    const closeLightbox = () => {
+      lb.classList.remove('open');
+      lb.setAttribute('aria-hidden', 'true');
+      lbImg.src = '';
+    };
+    document.querySelectorAll('.shots img').forEach(img => {
+      img.addEventListener('click', () => {
+        const fig = img.closest('figure');
+        const caption = fig?.querySelector('figcaption')?.textContent?.trim();
+        openLightbox(img.src, img.alt, caption);
+      });
+    });
+    lb.addEventListener('click', (e) => {
+      if (e.target === lb) closeLightbox();
+    });
+    lbClose.addEventListener('click', closeLightbox);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lb.classList.contains('open')) closeLightbox();
+    });
+
+    // Theme toggle persistence
+    const applyTheme = (t) => {
+      document.body.classList.toggle('light', t === 'light');
+      const pressed = t === 'light';
+      document.getElementById('themeToggle').setAttribute('aria-pressed', String(pressed));
+    };
+    const saved = localStorage.getItem('docsTheme');
+    const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+    applyTheme(saved ? saved : (prefersLight ? 'light' : 'dark'));
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const next = document.body.classList.contains('light') ? 'dark' : 'light';
+      localStorage.setItem('docsTheme', next);
+      applyTheme(next);
+    });
+  </script>
+</body>
+
+</html>
