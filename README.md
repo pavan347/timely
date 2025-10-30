@@ -16,13 +16,26 @@ A Chrome extension designed to help you analyze logs and Zendesk tickets across 
 
 ## Installation
 
+### Get the code
+
+You can either clone the repository or download a ZIP:
+
+- Clone: `git clone https://github.com/pavan347/timely.git`
+- ZIP: Download from https://github.com/pavan347/timely (Code → Download ZIP) and extract it
+
 ### Load Unpacked Extension (Development)
 
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable "Developer mode" (toggle in top right corner)
+1. Open Chrome and go to `chrome://extensions/`
+2. Enable "Developer mode" (toggle in the top right)
 3. Click "Load unpacked"
-4. Select the `Timely-Extension` folder
-5. The extension icon should appear in your toolbar!
+4. Select the project folder (the one containing `manifest.json`) — typically `Timely-Extension`
+5. Pin the Timely icon to your toolbar for quick access
+
+### Update to the latest version
+
+- If you cloned: open the project folder in a terminal and run `git pull origin main`
+- If you used ZIP: delete the old folder and re-download the latest ZIP, then load it again
+- In `chrome://extensions`, click "Reload" on the Timely card
 
 ## Usage
 
@@ -72,13 +85,13 @@ Each timezone card shows:
 
 ## Common Timezones Included
 
-- � **70+ Timezones** covering all major regions
-- 🇺🇸 **North America**: EST/EDT, CST/CDT, MST/MDT, PST/PDT, AKST, HST
-- �� **Europe**: GMT/BST, CET/CEST, EET/EEST, MSK
-- �� **Asia**: IST, GST, CST, JST, KST, SGT, HKT
-- 🇦🇺 **Pacific**: AEST/AEDT, NZST/NZDT
-- 🌍 **Africa**: SAST, WAT, EAT
-- 🌎 **South America**: BRT, ART, CLT
+- 70+ timezones covering all major regions
+- North America: EST/EDT, CST/CDT, MST/MDT, PST/PDT, AKST, HST
+- Europe: GMT/BST, CET/CEST, EET/EEST, MSK
+- Asia: IST, GST, CST, JST, KST, SGT, HKT
+- Pacific: AEST/AEDT, NZST/NZDT
+- Africa: SAST, WAT, EAT
+- South America: BRT, ART, CLT
 
 ### Examples of Searchable Terms:
 - Abbreviations: **IST**, **PST**, **GMT**, **UTC**, **EST**, **CST**, **JST**
@@ -109,7 +122,12 @@ MIT License - Feel free to modify and use for your needs!
 
 ## Support
 
-If you encounter any issues or have feature requests, please create an issue in the repository.
+If you encounter any issues or have feature requests, please create an issue in the repository or contact the author.
+
+- Repository: https://github.com/pavan347/timely
+- Issues: https://github.com/pavan347/timely/issues
+- Author: Garapati Pavan Kumar (Snaplogic)
+- Email: pkgarapati@snaplogic.com
 
 ---
 
