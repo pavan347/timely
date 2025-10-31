@@ -440,9 +440,10 @@
       <div class="nav-links" id="primaryNav">
         <a href="#overview">Overview</a>
         <a href="#features">Features</a>
-        <a href="#install">Install</a>
-  <a href="#usage">Usage</a>
-  <a href="#screenshots">Preview</a>
+    <a href="#install">Install</a>
+    <a href="#usage">Usage</a>
+    <a href="#copy">Copy & formats</a>
+    <a href="#screenshots">Preview</a>
         <a href="#faq">FAQ</a>
         <a href="#support">Support</a>
       </div>
@@ -533,6 +534,10 @@ cd timely</code></pre>
             <h3>Light/Dark themes</h3>
             <p>Theme toggle for day and night usage.</p>
           </div>
+          <div class="card"><span class="k">F</span>
+            <h3>Custom copy formats</h3>
+            <p>Set your preferred date and time formats for quick copying.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -622,6 +627,73 @@ cd timely</code></pre>
       </div>
     </section>
 
+    <section id="copy">
+      <div class="wrap">
+        <h2>Copy & formats</h2>
+        <p class="lead">Quickly copy the current date or time for any timezone, or both together, and customize the format from settings.</p>
+        <div class="grid" style="grid-template-columns: 1.1fr 1fr; gap: 18px;">
+          <div class="card">
+            <h3 style="margin-top:0">Copy buttons</h3>
+            <ul style="line-height:1.8; padding-left: 18px;">
+              <li><strong>Date copy</strong>: button next to the date field copies the date using your chosen format.</li>
+              <li><strong>Time copy</strong>: button next to the time field copies the time using your chosen format.</li>
+              <li><strong>Combined copy</strong>: small copy button in the card header (next to the timezone name) copies <em>date + time</em> together.</li>
+              <li><strong>Feedback</strong>: copied state shows a ✓ briefly, then reverts to the copy icon.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">Customize formats</h3>
+            <ul style="line-height:1.8; padding-left: 18px;">
+              <li>Click the <strong>⚙️</strong> settings button beside the theme toggle in the header.</li>
+              <li>Set your <strong>Date format</strong> and <strong>Time format</strong>; a live preview shows how they’ll look.</li>
+              <li>Formats are saved with the extension and used by the copy buttons.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <h3 style="margin-top:0">Supported tokens</h3>
+          <p class="muted" style="margin:8px 0 10px;">You can mix these tokens in any order to build the string you want.</p>
+          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+            <div>
+              <strong>Date</strong>
+              <ul style="line-height:1.8; padding-left:18px; margin-top:6px;">
+                <li><code>yyyy</code> → 2025</li>
+                <li><code>yy</code> → 25</li>
+                <li><code>MMMM</code> → October</li>
+                <li><code>MMM</code> → Oct</li>
+                <li><code>MM</code> / <code>M</code> → 10 / 10</li>
+                <li><code>dd</code> / <code>d</code> → 07 / 7</li>
+              </ul>
+            </div>
+            <div>
+              <strong>Time</strong>
+              <ul style="line-height:1.8; padding-left:18px; margin-top:6px;">
+                <li><code>HH</code> / <code>H</code> → 20 / 20 (24h)</li>
+                <li><code>hh</code> / <code>h</code> → 08 / 8 (12h)</li>
+                <li><code>mm</code> / <code>m</code> → 05 / 5</li>
+                <li><code>a</code> → AM / PM</li>
+              </ul>
+            </div>
+            <div>
+              <strong>Zone</strong>
+              <ul style="line-height:1.8; padding-left:18px; margin-top:6px;">
+                <li><code>z</code> → IST, EDT, etc.</li>
+              </ul>
+            </div>
+          </div>
+          <h3 style="margin:10px 0 6px;">Examples</h3>
+          <ul style="line-height:1.8; padding-left:18px;">
+            <li><code>dd MMM yyyy</code> → 20 Oct 2025</li>
+            <li><code>d MMM yyyy</code> → 7 Oct 2025</li>
+            <li><code>yyyy-MM-dd</code> → 2025-10-30</li>
+            <li><code>HH:mm z</code> → 20:20 IST</li>
+            <li><code>h:mm a z</code> → 8:20 PM IST</li>
+            <li><code>MMM dd yyyy h:mm a z</code> → Oct 30 2025 8:20 PM IST</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
 
 
     <section id="screenshots">
@@ -638,8 +710,12 @@ cd timely</code></pre>
             <figcaption>Search</figcaption>
           </figure>
           <figure>
-            <img src="blacktheme24.png" alt="Dark theme layout" loading="lazy">
-            <figcaption>Dark theme</figcaption>
+            <img src="settings.png" alt="Copy format settings" loading="lazy">
+            <figcaption>Copy format settings</figcaption>
+          </figure>
+          <figure>
+            <img src="12hourdarktheme.png" alt="12-hour dark theme" loading="lazy">
+            <figcaption>12-hour dark theme</figcaption>
           </figure>
         </div>
       </div>
