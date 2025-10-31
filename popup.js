@@ -94,10 +94,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   // CRITICAL: Load time format FIRST before rendering any cards
   await loadTimeFormat();
   await loadTheme();
+  await loadCopyFormats();
   await loadTimezones();  // This calls renderTimezones(), so format must be loaded first
   setupEventListeners();
   setupTimezoneSearch();
   setupThemeToggle();
+  setupSettingsModal();
   setupTimeFormatToggle();
   setupRefreshButton();
 });
@@ -209,6 +211,99 @@ function getTimezoneData(tzId) {
 // Setup event listeners
 function setupEventListeners() {
   document.getElementById('resetBtn').addEventListener('click', resetAll);
+}
+
+// ------- Copy formats (user customizable) -------
+let copyDateFormat = 'yyyy-MM-dd';
+let copyTimeFormat = 'HH:mm z';
+
+async function loadCopyFormats() {
+  const { copyDateFormat: df, copyTimeFormat: tf } = await chrome.storage.sync.get(['copyDateFormat','copyTimeFormat']);
+  if (df) copyDateFormat = df;
+  if (tf) copyTimeFormat = tf;
+}
+
+async function saveCopyFormats(df, tf) {
+  copyDateFormat = df;
+  copyTimeFormat = tf;
+  await chrome.storage.sync.set({ copyDateFormat: df, copyTimeFormat: tf });
+}
+
+function setupSettingsModal() {
+  const btn = document.getElementById('settingsBtn');
+  const modal = document.getElementById('settingsModal');
+  const closeBtn = document.getElementById('settingsClose');
+  const cancelBtn = document.getElementById('settingsCancel');
+  const saveBtn = document.getElementById('settingsSave');
+  const dateInput = document.getElementById('dateFormatInput');
+  const timeInput = document.getElementById('timeFormatInput');
+  const prevDate = document.getElementById('previewDate');
+  const prevTime = document.getElementById('previewTime');
+
+  const updatePreview = () => {
+    const tz = activeTz[0] || 'UTC';
+    const now = convertToTimezone(new Date(), tz);
+    const dt = createDateInTimezone(now.date, parseInt(now.hours), parseInt(now.minutes), parseInt(now.seconds), tz);
+    prevDate.textContent = formatWithPattern(dt, tz, dateInput.value || copyDateFormat);
+    prevTime.textContent = formatWithPattern(dt, tz, timeInput.value || copyTimeFormat);
+  };
+
+  btn.addEventListener('click', () => {
+    dateInput.value = copyDateFormat;
+    timeInput.value = copyTimeFormat;
+    updatePreview();
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    modal.querySelector('.modal').focus();
+  });
+  const close = () => { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); };
+  closeBtn.addEventListener('click', close);
+  cancelBtn.addEventListener('click', close);
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  dateInput.addEventListener('input', updatePreview);
+  timeInput.addEventListener('input', updatePreview);
+  saveBtn.addEventListener('click', async () => {
+    await saveCopyFormats(dateInput.value || copyDateFormat, timeInput.value || copyTimeFormat);
+    close();
+  });
+}
+
+// Format with minimal token support: yyyy, MM, dd, MMM, MMMM, HH, hh, mm, a, z
+function formatWithPattern(date, tz, pattern) {
+  const longMonth = new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'long' }).format(date);
+  const shortMonth = new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'short' }).format(date);
+  const parts = convertToTimezone(date, tz);
+  const tzData = getTimezoneData(tz);
+  const year = parts.date.slice(0,4);
+  const month2 = parts.date.slice(5,7);
+  const month = String(parseInt(month2, 10));
+  const day2 = parts.date.slice(8,10);
+  const day = String(parseInt(day2, 10));
+  const hours24 = parseInt(parts.hours, 10);
+  const minutes2 = parts.minutes;
+  const minutes = String(parseInt(minutes2, 10));
+  const ampm = hours24 >= 12 ? 'PM' : 'AM';
+  const hours12n = (hours24 % 12) || 12;
+  const tokenMap = {
+    yyyy: year,
+    yy: year.slice(2),
+    MMMM: longMonth,
+    MMM: shortMonth,
+    MM: month2,
+    M: month,
+    dd: day2,
+    d: day,
+    HH: String(hours24).padStart(2, '0'),
+    H: String(hours24),
+    hh: String(hours12n).padStart(2, '0'),
+    h: String(hours12n),
+    mm: String(parseInt(minutes2, 10)).padStart(2, '0'),
+    m: minutes,
+    a: ampm,
+    z: tzData.abbr
+  };
+  return pattern.replace(/yyyy|yy|MMMM|MMM|MM|M|dd|d|HH|H|hh|h|mm|m|a|z/g, (t) => tokenMap[t] ?? t);
 }
 
 // Setup theme toggle
@@ -623,16 +718,21 @@ function createTimezoneCard(tz) {
         <span class="timezone-abbr">${tzData.abbr}</span>
         <span class="timezone-full">${tzData.name}</span>
         <span class="timezone-gmt">GMT${gmtOffset}</span>
+        <button class="copy-btn" data-copy="both" title="Copy date & time">📋</button>
       </div>
       <button class="remove-btn" data-tz="${tz}" title="Remove timezone">×</button>
     </div>
     <div class="time-date-inputs">
       <div class="input-group date-group">
-        <input type="date" class="date-input" value="${timeInTz.date}" data-tz="${tz}">
+        <div class="time-wrapper">
+          <input type="date" class="date-input" value="${timeInTz.date}" data-tz="${tz}">
+          <button class="copy-btn" data-copy="date" title="Copy date">📋</button>
+        </div>
       </div>
       <div class="input-group time-group">
         <div class="time-wrapper">
           ${timeWrapperContent}
+          <button class="copy-btn" data-copy="time" title="Copy time">📋</button>
         </div>
       </div>
     </div>
@@ -645,6 +745,7 @@ function createTimezoneCard(tz) {
   const timeInput = card.querySelector('.time-input');
   const dateInput = card.querySelector('.date-input');
   const timePeriod = card.querySelector('.time-period');
+  const copyButtons = card.querySelectorAll('.copy-btn');
   
   // Toggle AM/PM on click in 12-hour mode
   if (timePeriod) {
@@ -702,6 +803,37 @@ function createTimezoneCard(tz) {
     card.dataset.manual = 'true';
     manualPaused = true;
     handleTimeInputChange(tz);
+  });
+
+  // Copy button handlers
+  copyButtons.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const kind = btn.dataset.copy; // 'date' | 'time' | 'both'
+      const baseDate = createDateInTimezone(
+        card.querySelector('.date-input').value,
+        ...(() => { const [h,m] = (card.querySelector('.time-input').value || '00:00').split(':'); return [parseInt(h)||0, parseInt(m)||0, 0]; })(),
+        tz
+      );
+      let text = '';
+      if (kind === 'date') {
+        text = formatWithPattern(baseDate, tz, copyDateFormat);
+      } else if (kind === 'time') {
+        text = formatWithPattern(baseDate, tz, copyTimeFormat);
+      } else if (kind === 'both') {
+        const d = formatWithPattern(baseDate, tz, copyDateFormat);
+        const t = formatWithPattern(baseDate, tz, copyTimeFormat);
+        text = `${d} ${t}`;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        const original = btn.textContent;
+        btn.textContent = '✓';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1200);
+      } catch (err) {
+        console.error('Copy failed', err);
+      }
+    });
   });
   
   return card;

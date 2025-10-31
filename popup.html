@@ -21,6 +21,7 @@
             <span class="icon moon">🌙</span>
           </span>
         </label>
+        <button id="settingsBtn" class="icon-btn" title="Copy format settings" aria-haspopup="dialog" aria-controls="settingsModal">⚙️</button>
       </div>
     </header>
 
@@ -57,6 +58,37 @@
     <footer>
       <button id="resetBtn" class="btn btn-secondary">Reset All</button>
     </footer>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal-backdrop" aria-hidden="true" role="dialog">
+    <div class="modal" role="document" aria-labelledby="settingsTitle" aria-modal="true" tabindex="-1">
+      <div class="modal-header">
+        <h2 id="settingsTitle">Copy Format Settings</h2>
+        <button class="modal-close" id="settingsClose" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <label for="dateFormatInput">Date format</label>
+          <input type="text" id="dateFormatInput" placeholder="dd MMM yyyy">
+          <small class="hint">Tokens: yyyy, yy, MM, M, dd, d, MMM, MMMM</small>
+        </div>
+        <div class="form-row">
+          <label for="timeFormatInput">Time format</label>
+          <input type="text" id="timeFormatInput" placeholder="hh:mm a z">
+          <small class="hint">Tokens: HH, H, hh, h, mm, m, a, z (zone abbr)</small>
+        </div>
+        <div class="preview">
+          <div>Preview (using your first timezone if available):</div>
+          <code id="previewDate">—</code>
+          <code id="previewTime">—</code>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="settingsCancel">Cancel</button>
+        <button class="btn btn-primary" id="settingsSave">Save</button>
+      </div>
+    </div>
   </div>
 
   <script src="popup.js"></script>
