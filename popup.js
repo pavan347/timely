@@ -247,6 +247,7 @@ function setupSettingsModal() {
   const timeInput = document.getElementById('timeFormatInput');
   const prevDate = document.getElementById('previewDate');
   const prevTime = document.getElementById('previewTime');
+  const triggerBtn = btn; // focus will return here on close
 
   const updatePreview = () => {
     const tz = activeTz[0] || 'UTC';
@@ -264,7 +265,17 @@ function setupSettingsModal() {
     modal.setAttribute('aria-hidden','false');
     modal.querySelector('.modal').focus();
   });
-  const close = () => { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); };
+  const close = () => {
+    // If focus is still inside the modal, blur it before hiding (to avoid aria-hidden on focused ancestors)
+    const active = document.activeElement;
+    if (active && modal.contains(active)) {
+      try { active.blur(); } catch {}
+    }
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    // return focus to the trigger for accessibility
+    triggerBtn && triggerBtn.focus && triggerBtn.focus();
+  };
   closeBtn.addEventListener('click', close);
   cancelBtn.addEventListener('click', close);
   modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
@@ -1144,6 +1155,7 @@ function setupHistoryModal() {
   const closeTop = document.getElementById('historyClose');
   const closeBottom = document.getElementById('historyCloseBottom');
   const clearBtn = document.getElementById('historyClear');
+  const triggerBtn = btn;
 
   const open = async () => {
     await renderHistoryList();
@@ -1151,7 +1163,15 @@ function setupHistoryModal() {
     modal.setAttribute('aria-hidden','false');
     modal.querySelector('.modal').focus();
   };
-  const close = () => { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); };
+  const close = () => {
+    const active = document.activeElement;
+    if (active && modal.contains(active)) {
+      try { active.blur(); } catch {}
+    }
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    triggerBtn && triggerBtn.focus && triggerBtn.focus();
+  };
 
   btn?.addEventListener('click', open);
   closeTop?.addEventListener('click', close);
@@ -1160,6 +1180,13 @@ function setupHistoryModal() {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 
   clearBtn?.addEventListener('click', async () => {
+    const history = await loadHistory();
+    if (history.length === 0){
+      alert('No saved history to clear.');
+      return;
+    }
+    const confirmClear = confirm('Are you sure you want to clear all saved history? This action cannot be undone.');
+    if (!confirmClear) return;
     await saveHistory([]);
     await renderHistoryList();
   });
@@ -1168,8 +1195,14 @@ function setupHistoryModal() {
 function closeHistoryModal() {
   const modal = document.getElementById('historyModal');
   if (modal) {
+    const active = document.activeElement;
+    if (active && modal.contains(active)) {
+      try { active.blur(); } catch {}
+    }
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden','true');
+    const trigger = document.getElementById('historyBtn');
+    trigger && trigger.focus && trigger.focus();
   }
 }
 
@@ -1180,7 +1213,7 @@ function formatSnapshotRow(snapshot) {
   const baseDateStr = formatWithPattern(dt, srcTz, copyDateFormat);
   const baseTimeStr = formatWithPattern(dt, srcTz, copyTimeFormat);
   const tzAbbr = getTimezoneData(srcTz).abbr;
-  return `${baseDateStr} ${baseTimeStr}`.trim().replace(/\s+$/, '') + ` ${tzAbbr ? tzAbbr : ''}`;
+  return [`${baseDateStr}`, `${baseTimeStr}`.trim().replace(/\s+$/, '')];
 }
 
 async function renderHistoryList() {
@@ -1199,7 +1232,7 @@ async function renderHistoryList() {
     const title = formatSnapshotRow(snap);
     row.innerHTML = `
       <div class="history-row">
-        <div class="history-title"><span class="history-index">${idx + 1}.</span> ${title}</div>
+        <div class="history-title"><span class="history-index">${idx + 1}.</span> ${title[0]} <b>${title[1]}</b></div>
         <div class="history-actions">
           <button class="btn btn-secondary" title="Apply with date" data-act="apply-date" data-id="${snap.id}">📅</button>
           <button class="btn btn-secondary" title="Apply without date" data-act="apply-time" data-id="${snap.id}">🕒</button>
