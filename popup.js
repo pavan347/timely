@@ -88,6 +88,7 @@ let isUpdating = false;
 let filteredTimezones = [...TIMEZONES_DATA];
 let is24HourFormat = true;
 let manualPaused = false; // when true, pause all auto-updates because user is editing
+let lastEditedTz = null; // track last changed timezone for snapshot save
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -102,6 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupSettingsModal();
   setupTimeFormatToggle();
   setupRefreshButton();
+  setupHistoryModal();
 });
 
 // Setup timezone search
@@ -211,6 +213,12 @@ function getTimezoneData(tzId) {
 // Setup event listeners
 function setupEventListeners() {
   document.getElementById('resetBtn').addEventListener('click', resetAll);
+  const saveBtn = document.getElementById('saveBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      await saveCurrentSnapshot();
+    });
+  }
 }
 
 // ------- Copy formats (user customizable) -------
@@ -718,7 +726,6 @@ function createTimezoneCard(tz) {
         <span class="timezone-abbr">${tzData.abbr}</span>
         <span class="timezone-full">${tzData.name}</span>
         <span class="timezone-gmt">GMT${gmtOffset}</span>
-        <button class="copy-btn" data-copy="both" title="Copy date & time">📋</button>
       </div>
       <button class="remove-btn" data-tz="${tz}" title="Remove timezone">×</button>
     </div>
@@ -746,6 +753,35 @@ function createTimezoneCard(tz) {
   const dateInput = card.querySelector('.date-input');
   const timePeriod = card.querySelector('.time-period');
   const copyButtons = card.querySelectorAll('.copy-btn');
+
+  // Click-to-copy on timezone label (copies date + time)
+  const tzNameEl = card.querySelector('.timezone-name');
+  tzNameEl.addEventListener('click', async (e) => {
+    // Ignore clicks on the drag-handle
+    if (e.target.closest('.drag-handle')) return;
+    const [h, m] = (timeInput.value || '00:00').split(':');
+    const baseDate = createDateInTimezone(
+      dateInput.value,
+      parseInt(h) || 0,
+      parseInt(m) || 0,
+      0,
+      tz
+    );
+    const d = formatWithPattern(baseDate, tz, copyDateFormat);
+    const t = formatWithPattern(baseDate, tz, copyTimeFormat);
+    const text = `${d} ${t}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      // Show a transient ✓ tick next to the label
+      const tick = document.createElement('span');
+      tick.className = 'copy-tick';
+      tick.textContent = '✓';
+      tzNameEl.appendChild(tick);
+      setTimeout(() => tick.remove(), 1200);
+    } catch (err) {
+      console.error('Copy failed', err);
+    }
+  });
   
   // Toggle AM/PM on click in 12-hour mode
   if (timePeriod) {
@@ -875,6 +911,8 @@ function convertToTimezone(date, tz) {
 function handleTimeInputChange(sourceTz) {
   if (isUpdating) return;
   isUpdating = true;
+  // Track the last edited timezone for snapshot saving
+  lastEditedTz = sourceTz;
   
   console.log('handleTimeInputChange called for:', sourceTz, 'isUpdating was false, now true');
   
@@ -1029,4 +1067,211 @@ function updateTimezoneCard(tz, date) {
   }
   
   card.querySelector('.date-input').value = timeInTz.date;
+}
+
+// -------------------- Save / History --------------------
+const HISTORY_LIMIT = 50;
+
+async function loadHistory() {
+  const { history } = await chrome.storage.sync.get(['history']);
+  return Array.isArray(history) ? history : [];
+}
+
+async function saveHistory(history) {
+  await chrome.storage.sync.set({ history });
+}
+
+function captureCurrentInstantFromUI() {
+  if (!activeTz.length) return null;
+  const tz = lastEditedTz || activeTz[0];
+  const card = document.querySelector(`[data-timezone="${tz}"]`);
+  if (!card) return null;
+  const dateStr = (card.querySelector('.date-input')?.value) || '';
+  const [h, m] = ((card.querySelector('.time-input')?.value) || '00:00').split(':');
+  const hours = parseInt(h) || 0;
+  const minutes = parseInt(m) || 0;
+  const baseDate = createDateInTimezone(dateStr, hours, minutes, 0, tz);
+  return { baseDate, tz };
+}
+
+async function saveCurrentSnapshot() {
+  const saveBtn = document.getElementById('saveBtn');
+  const captured = captureCurrentInstantFromUI();
+  if (!captured) return;
+  const { baseDate: instant, tz: sourceTz } = captured;
+
+  const is12Hour = !is24HourFormat;
+  const snapshot = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    savedAt: new Date().toISOString(),
+    instantISO: instant.toISOString(), // store canonical UTC instant
+    timezones: [...activeTz],
+    is12Hour,
+    sourceTz
+  };
+
+  const history = await loadHistory();
+  // If at limit, confirm with user before dropping the oldest
+  if (history.length >= HISTORY_LIMIT) {
+    const proceed = confirm(`You can save up to ${HISTORY_LIMIT} history items. Saving this will delete the oldest entry. Continue?`);
+    if (!proceed) {
+      return; // user cancelled
+    }
+  }
+  // Insert newest at the top
+  history.unshift(snapshot);
+  // Trim to limit (drop oldest beyond the limit)
+  if (history.length > HISTORY_LIMIT) {
+    history.splice(HISTORY_LIMIT);
+  }
+  await saveHistory(history);
+
+  // quick feedback
+  if (saveBtn) {
+    const prev = saveBtn.textContent;
+    saveBtn.classList.add('saved');
+    saveBtn.textContent = '✓';
+    setTimeout(() => {
+      saveBtn.classList.remove('saved');
+      saveBtn.textContent = prev;
+    }, 1000);
+  }
+}
+
+function setupHistoryModal() {
+  const btn = document.getElementById('historyBtn');
+  const modal = document.getElementById('historyModal');
+  const closeTop = document.getElementById('historyClose');
+  const closeBottom = document.getElementById('historyCloseBottom');
+  const clearBtn = document.getElementById('historyClear');
+
+  const open = async () => {
+    await renderHistoryList();
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    modal.querySelector('.modal').focus();
+  };
+  const close = () => { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); };
+
+  btn?.addEventListener('click', open);
+  closeTop?.addEventListener('click', close);
+  closeBottom?.addEventListener('click', close);
+  modal?.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+
+  clearBtn?.addEventListener('click', async () => {
+    await saveHistory([]);
+    await renderHistoryList();
+  });
+}
+
+function closeHistoryModal() {
+  const modal = document.getElementById('historyModal');
+  if (modal) {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+  }
+}
+
+function formatSnapshotRow(snapshot) {
+  const srcTz = snapshot.sourceTz || snapshot.timezones[0] || 'UTC';
+  const dt = new Date(snapshot.instantISO);
+  // Compose a compact date+time preview using current user formats, in the saved timezone
+  const baseDateStr = formatWithPattern(dt, srcTz, copyDateFormat);
+  const baseTimeStr = formatWithPattern(dt, srcTz, copyTimeFormat);
+  const tzAbbr = getTimezoneData(srcTz).abbr;
+  return `${baseDateStr} ${baseTimeStr}`.trim().replace(/\s+$/, '') + ` ${tzAbbr ? tzAbbr : ''}`;
+}
+
+async function renderHistoryList() {
+  const list = document.getElementById('historyList');
+  const history = await loadHistory();
+  list.innerHTML = '';
+
+  if (!history.length) {
+    list.innerHTML = '<div class="history-empty">No saved conversions yet.</div>';
+    return;
+  }
+
+  history.forEach((snap, idx) => {
+    const row = document.createElement('div');
+    row.className = 'history-item';
+    const title = formatSnapshotRow(snap);
+    row.innerHTML = `
+      <div class="history-row">
+        <div class="history-title"><span class="history-index">${idx + 1}.</span> ${title}</div>
+        <div class="history-actions">
+          <button class="btn btn-secondary" title="Apply with date" data-act="apply-date" data-id="${snap.id}">📅</button>
+          <button class="btn btn-secondary" title="Apply without date" data-act="apply-time" data-id="${snap.id}">🕒</button>
+          <button class="btn btn-secondary" title="Delete" data-act="delete" data-id="${snap.id}">🗑️</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll('button[data-act]')?.forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.currentTarget.getAttribute('data-id');
+      const act = e.currentTarget.getAttribute('data-act');
+      const history = await loadHistory();
+      const idx = history.findIndex(h => h.id === id);
+      if (idx === -1) return;
+      if (act === 'apply-date') {
+        await applySnapshotWithDate(history[idx]);
+        closeHistoryModal();
+      } else if (act === 'apply-time') {
+        await applySnapshotTimeOnly(history[idx]);
+        closeHistoryModal();
+      } else if (act === 'delete') {
+        history.splice(idx, 1);
+        await saveHistory(history);
+        await renderHistoryList();
+      }
+    });
+  });
+}
+
+async function applySnapshotWithDate(snapshot) {
+  // Pause auto updates while applying snapshot
+  manualPaused = true;
+  // 1) Apply time format stored in the snapshot
+  await setTimeFormat(snapshot.is12Hour);
+
+  // 2) Replace timezones order
+  activeTz = [...snapshot.timezones];
+  await saveTimezones();
+  renderTimezones();
+
+  // 3) Update all cards with the saved instant and pause auto updates
+  const when = new Date(snapshot.instantISO);
+  activeTz.forEach(tz => updateTimezoneCard(tz, when));
+  // keep snapshot static until user refreshes or edits
+}
+
+async function applySnapshotTimeOnly(snapshot) {
+  // Pause auto updates while applying snapshot
+  manualPaused = true;
+  // 1) Apply time format stored in the snapshot
+  await setTimeFormat(snapshot.is12Hour);
+
+  // 2) Replace timezones order
+  activeTz = [...snapshot.timezones];
+  await saveTimezones();
+  renderTimezones();
+
+  // 3) For each timezone, keep its current date but apply the time from the saved instant in that timezone
+  const savedInstant = new Date(snapshot.instantISO);
+  activeTz.forEach(tz => {
+    const card = document.querySelector(`[data-timezone="${tz}"]`);
+    if (!card) return;
+    const currentDateStr = (card.querySelector('.date-input')?.value) || '';
+    const local = convertToTimezone(savedInstant, tz);
+    const hours = parseInt(local.hours, 10) || 0;
+    const minutes = parseInt(local.minutes, 10) || 0;
+    const seconds = parseInt(local.seconds, 10) || 0;
+    const composed = createDateInTimezone(currentDateStr, hours, minutes, seconds, tz);
+    updateTimezoneCard(tz, composed);
+  });
+  // keep snapshot static until user refreshes or edits
 }

@@ -14,28 +14,23 @@
           <h1><img src="./icons/icon16.png" alt="Timely Logo"> Timely</h1>
           <p class="subtitle">Multi-Timezone Converter</p>
         </div>
-        <label class="theme-switch" title="Toggle theme">
-          <input type="checkbox" id="themeToggle">
-          <span class="slider">
-            <span class="icon sun">☀️</span>
-            <span class="icon moon">🌙</span>
-          </span>
-        </label>
-        <button id="settingsBtn" class="icon-btn" title="Copy format settings" aria-haspopup="dialog" aria-controls="settingsModal">⚙️</button>
+        <button id="settingsBtn" class="icon-btn" title="Settings" aria-haspopup="dialog" aria-controls="settingsModal">⚙️</button>
+        <button id="historyBtn" class="icon-btn" title="History" aria-haspopup="dialog" aria-controls="historyModal">🕘</button>
       </div>
     </header>
 
     <div class="add-timezone-section">
       <div class="search-controls">
         <input type="text" id="timezoneSearch" class="timezone-search" placeholder="🔍 Search timezone (e.g., IST, UTC, New York)...">
+        <button class="save-btn" id="saveBtn" title="Save this conversion">✓</button>
         
         <div class="time-format-toggle">
           <button class="format-btn active" data-format="24">24</button>
           <button class="format-btn" data-format="12">12</button>
         </div>
         
-        <button class="refresh-btn" id="refreshBtn" title="Reset to current time">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <button class="refresh-btn format-btn" id="refreshBtn" title="Reset to current time">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
           </svg>
         </button>
@@ -64,10 +59,20 @@
   <div id="settingsModal" class="modal-backdrop" aria-hidden="true" role="dialog">
     <div class="modal" role="document" aria-labelledby="settingsTitle" aria-modal="true" tabindex="-1">
       <div class="modal-header">
-        <h2 id="settingsTitle">Copy Format Settings</h2>
+        <h2 id="settingsTitle">Settings</h2>
         <button class="modal-close" id="settingsClose" aria-label="Close">✕</button>
       </div>
       <div class="modal-body">
+        <div class="form-row" style="align-items:center;">
+          <label for="themeToggle">Theme</label>
+          <label class="theme-switch" title="Toggle theme" style="justify-self:start;">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider">
+              <span class="icon sun">☀️</span>
+              <span class="icon moon">🌙</span>
+            </span>
+          </label>
+        </div>
         <div class="form-row">
           <label for="dateFormatInput">Date format</label>
           <input type="text" id="dateFormatInput" placeholder="dd MMM yyyy">
@@ -87,6 +92,23 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" id="settingsCancel">Cancel</button>
         <button class="btn btn-primary" id="settingsSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Modal -->
+  <div id="historyModal" class="modal-backdrop" aria-hidden="true" role="dialog">
+    <div class="modal" role="document" aria-labelledby="historyTitle" aria-modal="true" tabindex="-1">
+      <div class="modal-header">
+        <h2 id="historyTitle">Saved Conversions</h2>
+        <button class="modal-close" id="historyClose" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="historyList" class="history-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="historyClear">Clear All</button>
+        <button class="btn btn-primary" id="historyCloseBottom">Close</button>
       </div>
     </div>
   </div>
